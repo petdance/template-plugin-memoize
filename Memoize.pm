@@ -1,15 +1,94 @@
 package Template::Plugin::Memoize;
 
+use warnings;
 use strict;
-use vars qw( $VERSION );
-use base qw( Template::Plugin );
-use Template::Plugin;
+use parent 'Template::Plugin';
 
-$VERSION = '0.14';
+=head1 NAME
 
-#------------------------------------------------------------------------
-# new(\%options)
-#------------------------------------------------------------------------
+Template::Plugin::Memoize - Memoize/cache output of templates
+
+=head1 VERSION
+
+v1.0.0
+
+=cut
+
+our $VERSION = 'v1.0.0';
+
+=head1 SYNOPSIS
+
+    [% USE memoize = Memoize %]
+
+    [% memoize.inc(
+        'template' => 'slow.html',
+        'keys' => {'user.name' => user.name},
+        'ttl' => 360
+        )
+    %]
+
+    # or with a pre-defined Cache::* object and key
+    [% USE memoize = Memoize( cache => mycache ) %]
+    [% memoize.inc(
+           'template' => 'slow.html',
+           'key'      => mykey,
+           'ttl'      => 360
+           )
+    %]
+
+
+=head1 DESCRIPTION
+
+The Memoize plugin allows you to cache generated output from a template.
+You load the plugin with the standard syntax:
+
+    [% USE memoize = Memoize %]
+
+This creates a plugin object with the name C<memoize>.  You may also
+specify parameters for the default Cache module (Cache::FileCache),
+which is used for storage.
+
+    [% USE mycache = Cache(namespace => 'MyCache') %]
+
+Or use your own Cache object:
+
+    [% USE mycache = Cache(cache => mycacheobj) %]
+
+The only methods currently available are include and process,
+abbreviated to "inc" and "proc" to avoid clashing with built-in
+directives.  They work the same as the standard INCLUDE and PROCESS
+directives except that they will first look for cached output from the
+template being requested and if they find it they will use that
+instead of actually running the template.
+
+  [% cache.inc(
+        'template' => 'slow.html',
+        'keys' => {'user.name' => user.name},
+        'ttl' => 360
+        ) %]
+
+The template parameter names the file or block to include.  The keys
+are variables used to identify the correct cache file.  Different
+values for the specified keys will result in different cache files.
+The ttl parameter specifies the "time to live" for this cache file, in
+seconds.
+
+Why the ugliness on the keys?  Well, the TT dot notation can only be
+resolved correctly by the TT parser at compile time.  It's easy to
+look up simple variable names in the stash, but compound names like
+"user.name" are hard to resolve at runtime.  I may attempt to fake
+this in a future version, but it would be hacky and might cause
+problems.
+
+You may also use your own key value:
+
+  [% cache.inc(
+        'template' => 'slow.html',
+        'key'      => yourkey,
+        'ttl'      => 360
+        ) %]
+
+=cut
 
 sub new {
     my ( $class, $context, $params ) = @_;
@@ -71,85 +150,6 @@ sub _cached_action {
     return $result;
 }
 
-1;
-
-__END__
-
-=head1 NAME
-
-Template::Plugin::Memoize - Memoize/cache output of templates
-
-=head1 SYNOPSIS
-
-  [% USE memoize = Memoize %]
-
-  [% memoize.inc(
-        'template' => 'slow.html',
-        'keys' => {'user.name' => user.name},
-        'ttl' => 360
-        )
-    %]
-
-    # or with a pre-defined Cache::* object and key
-    [% USE memoize = Memoize( cache => mycache ) %]
-    [% memoize.inc(
-           'template' => 'slow.html',
-           'key'      => mykey,
-           'ttl'      => 360
-           )
-    %]
-
-=head1 DESCRIPTION
-
-The Memoize plugin allows you to cache generated output from a template.
-You load the plugin with the standard syntax:
-
-    [% USE memoize = Memoize %]
-
-This creates a plugin object with the name C<memoize>.  You may also
-specify parameters for the default Cache module (Cache::FileCache),
-which is used for storage.
-
-    [% USE mycache = Cache(namespace => 'MyCache') %]
-
-Or use your own Cache object:
-
-    [% USE mycache = Cache(cache => mycacheobj) %]
-
-The only methods currently available are include and process,
-abbreviated to "inc" and "proc" to avoid clashing with built-in
-directives.  They work the same as the standard INCLUDE and PROCESS
-directives except that they will first look for cached output from the
-template being requested and if they find it they will use that
-instead of actually running the template.
-
-  [% cache.inc(
-        'template' => 'slow.html',
-        'keys' => {'user.name' => user.name},
-        'ttl' => 360
-        ) %]
-
-The template parameter names the file or block to include.  The keys
-are variables used to identify the correct cache file.  Different
-values for the specified keys will result in different cache files.
-The ttl parameter specifies the "time to live" for this cache file, in
-seconds.
-
-Why the ugliness on the keys?  Well, the TT dot notation can only be
-resolved correctly by the TT parser at compile time.  It's easy to
-look up simple variable names in the stash, but compound names like
-"user.name" are hard to resolve at runtime.  I may attempt to fake
-this in a future version, but it would be hacky and might cause
-problems.
-
-You may also use your own key value:
-
-  [% cache.inc(
-        'template' => 'slow.html',
-        'key'      => yourkey,
-        'ttl'      => 360
-        ) %]
-
 =head1 QUESTIONS
 
 =head2 How is this different from the caching already built into Template Toolkit?
@@ -203,7 +203,7 @@ You can also look for information at:
 
 =over 4
 
-=item * File::Next's bug queue
+=item * Template::Plugin::Memoize's bug queue
 
 L<http://github.com/petdance/template-plugin-memoize/issues>
 

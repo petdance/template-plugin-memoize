@@ -15,6 +15,7 @@ WriteMakefile(
     LICENSE             => 'artistic_2',
     PREREQ_PM => {
         'Test::More' => 0.88,
+        'CHI'        => 0.60,
     },
     META_MERGE => {
         resources => {
