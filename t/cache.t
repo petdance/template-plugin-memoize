@@ -11,6 +11,9 @@ use Template qw( :status );
 $Template::Test::DEBUG = 1;
 $Template::Test::PRESERVE = 1;
 
+
+# XXX We have to clear the cache each time before testing.
+
 test_expect(\*DATA, {
     INTERPOLATE => 1,
     POST_CHOMP  => 1,
@@ -40,7 +43,7 @@ Hello
 [% SET change_me = 'after' %]
 [% END %]
 [% SET change_me = 'before' %]
-[% memoize.inc( 'cache_me', expires_in => 15 ) %]
+[% memoize.include( 'cache_me', expires_in => 15 ) %]
 [% change_me %]
 -- expect --
 Hello

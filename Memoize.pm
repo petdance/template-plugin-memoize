@@ -121,7 +121,7 @@ sub new {
     return $self;
 }
 
-sub inc {
+sub include {
     my $self = shift;
     $self->_cached_action( 'include', @_ );
 }
@@ -131,7 +131,7 @@ sub process {
     $self->_cached_action( 'process', @_ );
 }
 
-sub ins {
+sub insert {
     my $self = shift;
     $self->_cached_action( 'insert', @_ );
 }
@@ -157,9 +157,8 @@ sub _cached_action {
     }
     my $result = $self->{CACHE}->get($key);
     if ( !defined($result) ) {
-        $result = $self->{CONTEXT}->$action( $params->{template} );
-        $self->{CACHE}->set( $key, $result, { expires_in => $params->{ttl} } );
-        warn "stash the results";
+        $result = $self->{CONTEXT}->$action( $template );
+        $self->{CACHE}->set( $key, $result ); # XXX Allow other args to set?
     }
     return $result;
 }
