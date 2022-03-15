@@ -1,91 +1,60 @@
-#!/usr/bin/perl -w
-#============================================================= -*-perl-*-
-#
-# t/cache.t
-#
-# Template script testing the Template side of the page plugin.
-#
-# Written by Perrin Harkins <perrin@elem.com>
-#
-# This is free software; you can redistribute it and/or modify it
-# under the same terms as Perl itself.
-#
-#========================================================================
+#!perl
 
 use strict;
-use lib qw( ./lib ../blib );
-use Template qw( :status );
+use warnings;
+
+use Template::Plugin::Cache;
+
 use Template::Test;
-use Cache::FileCache;
-$^W = 1;
+use Template qw( :status );
 
 $Template::Test::DEBUG = 1;
 $Template::Test::PRESERVE = 1;
 
-# clear cache before beginning
-my $cache = Cache::FileCache->new();
-$cache->Clear();
-
 test_expect(\*DATA, {
-  INTERPOLATE => 1,
-  POST_CHOMP => 1,
-  PLUGIN_BASE => 'Template::Plugin',
+    INTERPOLATE => 1,
+    POST_CHOMP  => 1,
+    PLUGIN_BASE => 'Template::Plugin',
 });
 
 
-#------------------------------------------------------------------------
-# test input
-#------------------------------------------------------------------------
+exit 0;
+
 
 __DATA__
-[% USE cache = Cache %]
+[% USE memoize = Memoize %]
 [% BLOCK cache_me %]
 Hello
 [% SET change_me = 'after' %]
 [% END %]
 [% SET change_me = 'before' %]
-[% cache.proc(
-             'template' => 'cache_me',
-             'ttl' => 15
-             ) %]
+[% memoize.process( 'cache_me', expires_in => 15 ) %]
 [% change_me %]
 -- expect --
 Hello
 after
 -- test --
-[% USE cache = Cache %]
+[% USE memoize = Memoize %]
 [% BLOCK cache_me %]
 Hello
 [% SET change_me = 'after' %]
 [% END %]
 [% SET change_me = 'before' %]
-[% cache.inc(
-             'template' => 'cache_me',
-             'ttl' => 15
-             ) %]
+[% memoize.inc( 'cache_me', expires_in => 15 ) %]
 [% change_me %]
 -- expect --
 Hello
 before
 -- test --
-[% USE cache = Cache %]
+[% USE memoize = Memoize %]
 [% BLOCK cache_me %]
  Hello [% name %]
 [% END %]
 [% SET name = 'Suzanne' %]
-[% cache.proc(
-             'template' => 'cache_me',
-             'keys' => {'name' => name},
-             'ttl' => 15
-             ) %]
+[% memoize.process( 'cache_me', keys => { 'name' => name } ) %]
 [% SET name = 'World' %]
 
-[% cache.proc(
-             'template' => 'cache_me',
-             'keys' => {'name' => name},
-             'ttl' => 15
-             ) %]
-
+[% memoize.process( 'cache_me', keys => { 'name' => name } ) %]
 -- expect --
  Hello Suzanne
  Hello World
