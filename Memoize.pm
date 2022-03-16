@@ -108,10 +108,10 @@ sub new {
                 default_expires_in => 600, # 10 minutes
             };
         }
-        use Carp::Always;
         # XXX Can the CHI constructor fail?
         $cache = CHI->new( %{$cache_params} );
     }
+    $cache->clear();
     my $self = bless {
         CACHE   => $cache,
         CONFIG  => $params,
@@ -128,6 +128,7 @@ sub include {
 
 sub process {
     my $self = shift;
+    {use Data::Dumper; local $Data::Dumper::Sortkeys=1; warn Dumper( INSIDE_PROCESS => \@_ )}
     $self->_cached_action( 'process', @_ );
 }
 

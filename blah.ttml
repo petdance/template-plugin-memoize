@@ -1,0 +1,10 @@
+This is a template
+
+[% x = 15 %]
+[% x %], [% x %], [% x %]
+
+Start of proces
+[% USE memoize = Memoize %]
+[% memoize.process( 'subpage.tt', { expires_in => 15 }, { another => 12 }, y = 97, x = 12 ) %]
+
+End of process
