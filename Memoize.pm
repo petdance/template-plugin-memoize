@@ -10,7 +10,7 @@ v1.0.0
 
 =cut
 
-our $VERSION = 'v1.0.0';
+our $VERSION = 'v0.0.1';
 
 =head1 SYNOPSIS
 
@@ -109,9 +109,9 @@ sub new {
             };
         }
         # XXX Can the CHI constructor fail?
+        $cache_params->{namespace} //= 'Memoize';
         $cache = CHI->new( %{$cache_params} );
     }
-    $cache->clear();
     my $self = bless {
         CACHE   => $cache,
         CONFIG  => $params,
@@ -121,21 +121,24 @@ sub new {
     return $self;
 }
 
+
 sub include {
     my $self = shift;
     $self->_cached_action( 'include', @_ );
 }
 
+
 sub process {
     my $self = shift;
-    {use Data::Dumper; local $Data::Dumper::Sortkeys=1; warn Dumper( INSIDE_PROCESS => \@_ )}
     $self->_cached_action( 'process', @_ );
 }
+
 
 sub insert {
     my $self = shift;
     $self->_cached_action( 'insert', @_ );
 }
+
 
 sub _cached_action {
     my ( $self, $action, $template, $params ) = @_;
@@ -162,6 +165,14 @@ sub _cached_action {
         $self->{CACHE}->set( $key, $result ); # XXX Allow other args to set?
     }
     return $result;
+}
+
+
+sub clear {
+    my $self = shift;
+    $self->{CACHE}->clear();
+
+    return;
 }
 
 
